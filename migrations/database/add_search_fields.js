@@ -135,10 +135,11 @@ function buildSearchFromEnvelope(envelope, subjectField) {
         }
     }
 
-    // Extract to addresses
+    // Extract to addresses and names
     const toEntries = envelope[5];
     if (Array.isArray(toEntries) && toEntries.length) {
         const addresses = [];
+        const names = [];
         for (const entry of toEntries) {
             if (Array.isArray(entry) && entry[2] && entry[3]) {
                 const addr = (entry[2] + '@' + entry[3]).toLowerCase().trim();
@@ -146,16 +147,26 @@ function buildSearchFromEnvelope(envelope, subjectField) {
                     addresses.push(addr);
                 }
             }
+            if (Array.isArray(entry) && entry[0]) {
+                const name = entry[0].toString().toLowerCase().trim();
+                if (name) {
+                    names.push(name);
+                }
+            }
         }
         if (addresses.length) {
             search.to = addresses;
         }
+        if (names.length) {
+            search.toName = names.join(' ');
+        }
     }
 
-    // Extract cc addresses
+    // Extract cc addresses and names
     const ccEntries = envelope[6];
     if (Array.isArray(ccEntries) && ccEntries.length) {
         const addresses = [];
+        const names = [];
         for (const entry of ccEntries) {
             if (Array.isArray(entry) && entry[2] && entry[3]) {
                 const addr = (entry[2] + '@' + entry[3]).toLowerCase().trim();
@@ -163,9 +174,18 @@ function buildSearchFromEnvelope(envelope, subjectField) {
                     addresses.push(addr);
                 }
             }
+            if (Array.isArray(entry) && entry[0]) {
+                const name = entry[0].toString().toLowerCase().trim();
+                if (name) {
+                    names.push(name);
+                }
+            }
         }
         if (addresses.length) {
             search.cc = addresses;
+        }
+        if (names.length) {
+            search.ccName = names.join(' ');
         }
     }
 

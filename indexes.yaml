@@ -357,6 +357,20 @@ indexes:
 
     - collection: messages
       index:
+          name: user_search_to_name
+          key:
+              user: 1
+              search.toName: 1
+
+    - collection: messages
+      index:
+          name: user_search_cc_name
+          key:
+              user: 1
+              search.ccName: 1
+
+    - collection: messages
+      index:
           # there can be only one $text index per collection
           name: fulltext
           key:
