@@ -1,6 +1,6 @@
 'use strict';
 /* global db, log */
-// MongoDB Migration Script: Add parsed search fields (search.from, search.to, search.cc, search.subject, search.fromName) to messages
+// MongoDB Migration Script: Add parsed search fields (search.from, search.to, search.cc, search.bcc, search.subject, etc.) to messages
 const config = require('@zone-eu/wild-config');
 
 const ENABLED = process.env.NODE_ENV === 'test' ? false : !!config?.migrations?.database?.addSearchFields?.enabled;
@@ -186,6 +186,33 @@ function buildSearchFromEnvelope(envelope, subjectField) {
         }
         if (names.length) {
             search.ccName = names.join(' ');
+        }
+    }
+
+    // Extract bcc addresses and names (preserved in sender's Sent folder)
+    const bccEntries = envelope[7];
+    if (Array.isArray(bccEntries) && bccEntries.length) {
+        const addresses = [];
+        const names = [];
+        for (const entry of bccEntries) {
+            if (Array.isArray(entry) && entry[2] && entry[3]) {
+                const addr = (entry[2] + '@' + entry[3]).toLowerCase().trim();
+                if (addr.includes('@')) {
+                    addresses.push(addr);
+                }
+            }
+            if (Array.isArray(entry) && entry[0]) {
+                const name = entry[0].toString().toLowerCase().trim();
+                if (name) {
+                    names.push(name);
+                }
+            }
+        }
+        if (addresses.length) {
+            search.bcc = addresses;
+        }
+        if (names.length) {
+            search.bccName = names.join(' ');
         }
     }
 

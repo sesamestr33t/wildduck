@@ -378,6 +378,20 @@ indexes:
 
     - collection: messages
       index:
+          name: user_search_bcc
+          key:
+              user: 1
+              search.bcc: 1
+
+    - collection: messages
+      index:
+          name: user_search_bcc_name
+          key:
+              user: 1
+              search.bccName: 1
+
+    - collection: messages
+      index:
           # there can be only one $text index per collection
           name: fulltext
           key:
