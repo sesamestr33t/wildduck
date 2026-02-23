@@ -322,6 +322,76 @@ indexes:
 
     - collection: messages
       index:
+          name: user_search_from
+          key:
+              user: 1
+              search.from: 1
+
+    - collection: messages
+      index:
+          name: user_search_to
+          key:
+              user: 1
+              search.to: 1
+
+    - collection: messages
+      index:
+          name: user_search_cc
+          key:
+              user: 1
+              search.cc: 1
+
+    - collection: messages
+      index:
+          name: user_search_subject
+          key:
+              user: 1
+              search.subject: 1
+
+    - collection: messages
+      index:
+          name: user_search_subject_words
+          key:
+              user: 1
+              search.subjectWords: 1
+
+    - collection: messages
+      index:
+          name: user_search_from_name
+          key:
+              user: 1
+              search.fromName: 1
+
+    - collection: messages
+      index:
+          name: user_search_to_name
+          key:
+              user: 1
+              search.toName: 1
+
+    - collection: messages
+      index:
+          name: user_search_cc_name
+          key:
+              user: 1
+              search.ccName: 1
+
+    - collection: messages
+      index:
+          name: user_search_bcc
+          key:
+              user: 1
+              search.bcc: 1
+
+    - collection: messages
+      index:
+          name: user_search_bcc_name
+          key:
+              user: 1
+              search.bccName: 1
+
+    - collection: messages
+      index:
           # there can be only one $text index per collection
           name: fulltext
           key:
