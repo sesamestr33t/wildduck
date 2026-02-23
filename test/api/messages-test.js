@@ -30,8 +30,11 @@ describe('Messages tests', function () {
         multiTerm1: 'searchquerymultiterm1token',
         multiTerm2: 'searchquerymultiterm2token',
         toAddress: 'search.query.to@to.com',
+        toName: 'Recipient Queryton',
         ccAddress: 'search.query.cc@to.com',
-        fromAddress: 'messagestestsuser@web.zone.test'
+        ccName: 'Carbon Copyson',
+        fromAddress: 'messagestestsuser@web.zone.test',
+        fromName: 'Sender Queryton'
     };
 
     before(async () => {
@@ -86,9 +89,9 @@ describe('Messages tests', function () {
             .post(`/users/${user}/mailboxes/${queryMailbox}/messages`)
             .send({
                 draft: true,
-                from: { address: queryFixture.fromAddress },
-                to: [{ address: queryFixture.toAddress }, { address: queryFixture.ccAddress }],
-                cc: [{ address: queryFixture.ccAddress }],
+                from: { name: queryFixture.fromName, address: queryFixture.fromAddress },
+                to: [{ name: queryFixture.toName, address: queryFixture.toAddress }, { address: queryFixture.ccAddress }],
+                cc: [{ name: queryFixture.ccName, address: queryFixture.ccAddress }],
                 bcc: [{ address: queryFixture.ccAddress }],
                 subject: queryFixture.subjectKeyword,
                 text: `${queryFixture.body} keyword marker ${queryFixture.multiTerm1} ${queryFixture.multiTerm2}`
@@ -99,8 +102,8 @@ describe('Messages tests', function () {
             .post(`/users/${user}/mailboxes/${queryMailbox}/messages`)
             .send({
                 draft: true,
-                from: { address: queryFixture.fromAddress },
-                to: [{ address: queryFixture.toAddress }],
+                from: { name: queryFixture.fromName, address: queryFixture.fromAddress },
+                to: [{ name: queryFixture.toName, address: queryFixture.toAddress }],
                 subject: queryFixture.subjectExcluded,
                 text: `${queryFixture.body} excluded marker`
             })
@@ -110,8 +113,8 @@ describe('Messages tests', function () {
             .post(`/users/${user}/mailboxes/${queryMailbox}/messages`)
             .send({
                 draft: true,
-                from: { address: queryFixture.fromAddress },
-                to: [{ address: queryFixture.toAddress }],
+                from: { name: queryFixture.fromName, address: queryFixture.fromAddress },
+                to: [{ name: queryFixture.toName, address: queryFixture.toAddress }],
                 subject: queryFixture.subjectAttachment,
                 text: `attachment marker ${queryFixture.attachmentBody}`,
                 attachments: [{ content: 'dGVzdA==', contentType: 'text/plain' }]
@@ -348,6 +351,92 @@ describe('Messages tests', function () {
 
         const res5 = await server.get(`/users/${user}/mailboxes/${testMailbox}/messages?previous=${res4.body.previousCursor}&page=100?order=${order}`).send({}); // page 2 -> page 1
         expect(res5.body.results).to.deep.eq(res.body.results); // Check if page 1 is equal to original page 1 after moving back from page 2
+    });
+
+    // Search field tests — verify search.* indexed fields
+
+    it('should GET /users/:user/search expect success / from= with email matches search.from', async () => {
+        const search = await server
+            .get(`/users/${user}/search?from=${encodeURIComponent(queryFixture.fromAddress)}&mailbox=${queryMailbox}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.equal(3);
+    });
+
+    it('should GET /users/:user/search expect success / from= with name matches search.fromName', async () => {
+        const search = await server
+            .get(`/users/${user}/search?from=${encodeURIComponent('Queryton')}&mailbox=${queryMailbox}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.equal(3);
+    });
+
+    it('should GET /users/:user/search expect success / to= with email matches search.to and search.cc', async () => {
+        const search = await server
+            .get(`/users/${user}/search?to=${encodeURIComponent(queryFixture.ccAddress)}&mailbox=${queryMailbox}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.be.above(0);
+    });
+
+    it('should GET /users/:user/search expect success / to= with name matches search.toName', async () => {
+        const search = await server
+            .get(`/users/${user}/search?to=${encodeURIComponent('Recipient')}&mailbox=${queryMailbox}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.equal(3);
+    });
+
+    it('should GET /users/:user/search expect success / subject= matches search.subject', async () => {
+        const search = await server
+            .get(`/users/${user}/search?subject=${encodeURIComponent('Keyword')}&mailbox=${queryMailbox}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.equal(1);
+        expect(search.body.results[0].subject).to.equal(queryFixture.subjectKeyword);
+    });
+
+    it('should GET /users/:user/search expect success / q from: with name matches search.fromName', async () => {
+        const q = `from:Queryton in:${queryMailbox}`;
+        const search = await server
+            .get(`/users/${user}/search?q=${encodeURIComponent(q)}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.equal(3);
+    });
+
+    it('should GET /users/:user/search expect success / q to: with name matches search.toName', async () => {
+        const q = `to:Recipient in:${queryMailbox}`;
+        const search = await server
+            .get(`/users/${user}/search?q=${encodeURIComponent(q)}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.equal(3);
+    });
+
+    it('should GET /users/:user/search expect success / q to: with name matches search.ccName', async () => {
+        const q = `to:Copyson in:${queryMailbox}`;
+        const search = await server
+            .get(`/users/${user}/search?q=${encodeURIComponent(q)}&limit=50`)
+            .send({})
+            .expect(200);
+
+        expect(search.body.success).to.be.true;
+        expect(search.body.results.length).to.be.above(0);
     });
 
     it('should PUT /users/:user/mailboxes/:mailbox/messages expect success / move lots of messages to trash, should not timeout', async () => {
