@@ -1,4 +1,4 @@
-FROM --platform=${TARGETPLATFORM} node:lts-alpine
+FROM node:lts-alpine
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETVARIANT
